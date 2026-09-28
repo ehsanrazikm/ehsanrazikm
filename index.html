@@ -266,7 +266,8 @@ const CLAN = [
 const MAIL_SCOUT = { name: "Mail Scout", role: "Reads your email", shape: "post", color: "#C62828" };
 /*MAIL_REPORT_START*/
 const MAIL_REPORT = {
-  checked: "Example report. Ask Claude to check your mail to fill this in.",
+  checked: "This public website shows an example report. Your real mail report is private, so only you can see it.",
+  privateLink: "https://claude.ai/artifact/YLBsfvCamSjRZZtxj7vX49",
   sections: [
     { title: "Do today", tone: "bad", items: [
       { what: "Team meeting at 3:30 PM", why: "Someone asked you to bring numbers to the meeting.", link: "" } ] },
@@ -482,7 +483,9 @@ function renderMailScout(a) {
   a.drawn = true;
 }
 function mailReportHTML() {
-  return `<div class="report"><p class="when">${esc(MAIL_REPORT.checked)}</p>` +
+  const priv = MAIL_REPORT.privateLink
+    ? `<a class="btn blue" href="${esc(MAIL_REPORT.privateLink)}" target="_blank" rel="noopener" style="justify-self:start;text-decoration:none">Open my real report</a>` : "";
+  return `<div class="report"><p class="when">${esc(MAIL_REPORT.checked)}</p>${priv}` +
     MAIL_REPORT.sections.filter(s => s.items.length).map(s => `
       <section class="tone-${s.tone}"><h4 class="stroke"><span class="chip"></span>${esc(s.title)} (${s.items.length})</h4>
       <ul>${s.items.map(i => `<li><b>${esc(i.what)}</b><p>${esc(i.why)}</p>${
