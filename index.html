@@ -1,0 +1,346 @@
+<!doctype html>
+<title>Agent Clan HQ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+  /* ---------- Colors (light theme) ---------- */
+  :root {
+    --bg: #EAF0F6;
+    --panel: #FFFFFF;
+    --ink: #1A2233;
+    --muted: #5B6780;
+    --line: #D5DEEA;
+    --banner: #FF7A1A;       /* clan color */
+    --banner-ink: #FFFFFF;
+    --good: #16A06A;
+    --warn: #E0A100;
+    --bad: #D9434B;
+    --think: #6C5CE7;
+    --track: #E3E9F2;
+    --display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+    --body: "Nunito", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  }
+  /* ---------- Colors (dark theme) ---------- */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0F1522; --panel: #182033; --ink: #E8EDF6; --muted: #98A4BC;
+      --line: #273149; --banner: #FF8A33; --banner-ink: #1A1206;
+      --good: #34C98A; --warn: #F2C037; --bad: #F06A71; --think: #9A8CFF; --track: #232C42;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0F1522; --panel: #182033; --ink: #E8EDF6; --muted: #98A4BC;
+    --line: #273149; --banner: #FF8A33; --banner-ink: #1A1206;
+    --good: #34C98A; --warn: #F2C037; --bad: #F06A71; --think: #9A8CFF; --track: #232C42;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 var(--body);
+    padding: 20px 16px 40px;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 20px; }
+  h1, h2, h3 { font-family: var(--display); margin: 0; line-height: 1.1; text-wrap: balance; }
+
+  /* ---------- Clan banner ---------- */
+  .banner {
+    background: var(--banner); color: var(--banner-ink);
+    border-radius: 18px; padding: 18px 20px;
+    display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: center; justify-content: space-between;
+  }
+  .banner h1 { font-size: clamp(28px, 5vw, 40px); font-weight: 800; }
+  .banner p { margin: 2px 0 0; opacity: .9; font-weight: 600; }
+  .totals { display: flex; flex-wrap: wrap; gap: 10px; }
+  .total {
+    background: rgba(255,255,255,.18); border-radius: 12px; padding: 8px 14px; min-width: 104px;
+  }
+  .total b { display: block; font: 800 24px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+  .total span { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .85; }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .toolbar .note { color: var(--muted); font-size: 13px; margin-left: auto; }
+  button, input {
+    font: 700 14px var(--body); border-radius: 10px; border: 2px solid var(--line);
+    background: var(--panel); color: var(--ink); padding: 8px 14px;
+  }
+  button { cursor: pointer; }
+  button:hover { border-color: var(--banner); }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--banner); outline-offset: 2px; }
+  button.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  form.add { display: flex; flex-wrap: wrap; gap: 8px; }
+  form.add input { width: 150px; font-weight: 600; }
+
+  /* ---------- Main layout ---------- */
+  .main { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .main { grid-template-columns: minmax(0, 1fr); } }
+  .agents { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+
+  /* ---------- Agent card ---------- */
+  .card {
+    background: var(--panel); border: 2px solid var(--line); border-radius: 16px;
+    padding: 14px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; min-width: 0;
+  }
+  .card.working { border-color: var(--agent); }
+  .top { display: flex; gap: 12px; align-items: center; }
+  .who { min-width: 0; flex: 1; }
+  .who h3 { font-size: 22px; }
+  .who .role { color: var(--muted); font-size: 13px; font-weight: 600; }
+
+  /* Robot face */
+  .bot { position: relative; width: 58px; height: 58px; flex: none; }
+  .bot .head {
+    position: absolute; inset: 10px 0 0 0; background: var(--agent); border-radius: 14px;
+    display: flex; gap: 9px; align-items: center; justify-content: center;
+  }
+  .bot .ant { position: absolute; left: 50%; top: 0; width: 3px; height: 11px; background: var(--agent); transform: translateX(-50%); }
+  .bot .ant::after {
+    content: ""; position: absolute; left: 50%; top: -5px; width: 9px; height: 9px; border-radius: 50%;
+    background: var(--agent); transform: translateX(-50%);
+  }
+  .bot .eye { width: 11px; height: 13px; background: #fff; border-radius: 50%; position: relative; overflow: hidden; }
+  .bot .eye::after {
+    content: ""; position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #111; left: 2.5px; top: 4px;
+  }
+  .working .bot .eye::after { animation: look 1.2s ease-in-out infinite alternate; }
+  .working .bot .ant::after { animation: blink 0.8s steps(2) infinite; background: #fff; }
+  .thinking .bot .eye::after { top: 1px; }
+  .idle .bot .eye { height: 3px; margin-top: 6px; }           /* sleepy eyes */
+  .stuck .bot .head { animation: shake .4s ease-in-out infinite; }
+  @keyframes look { from { left: 0; } to { left: 5px; } }
+  @keyframes blink { 50% { background: var(--agent); } }
+  @keyframes shake { 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+
+  .pill {
+    font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+    border-radius: 999px; padding: 3px 9px; white-space: nowrap; color: #fff;
+  }
+  .pill.working { background: var(--good); }
+  .pill.thinking { background: var(--think); }
+  .pill.idle { background: var(--muted); }
+  .pill.stuck { background: var(--bad); }
+
+  .task { font-size: 14px; min-height: 42px; }
+  .task small { display: block; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+  .bar { height: 10px; background: var(--track); border-radius: 99px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--agent); border-radius: 99px; transition: width .5s linear; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; text-align: center; }
+  .stats div { background: var(--bg); border-radius: 10px; padding: 6px 4px; }
+  .stats b { display: block; font: 500 17px var(--mono); font-variant-numeric: tabular-nums; }
+  .stats span { font-size: 11px; color: var(--muted); font-weight: 700; }
+
+  .history { display: flex; gap: 4px; align-items: center; font-size: 11px; color: var(--muted); font-weight: 700; }
+  .history .dot { width: 12px; height: 12px; border-radius: 3px; background: var(--track); }
+  .history .dot.ok { background: var(--good); }
+  .history .dot.fail { background: var(--bad); }
+  .level { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; color: var(--muted); }
+  .level .xp { flex: 1; height: 6px; background: var(--track); border-radius: 99px; overflow: hidden; }
+  .level .xp i { display: block; height: 100%; background: var(--warn); }
+
+  /* ---------- Side panels ---------- */
+  .side { display: grid; gap: 14px; }
+  .panel { background: var(--panel); border: 2px solid var(--line); border-radius: 16px; padding: 14px; }
+  .panel h2 { font-size: 20px; margin-bottom: 8px; }
+  .board { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .board li { display: grid; grid-template-columns: 26px 14px 1fr auto; gap: 8px; align-items: center; font-weight: 700; }
+  .board .rank { font: 800 18px var(--display); color: var(--muted); }
+  .board li:first-child .rank { color: var(--banner); }
+  .board .sw { width: 14px; height: 14px; border-radius: 4px; }
+  .board .score { font: 500 14px var(--mono); font-variant-numeric: tabular-nums; }
+  .log { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 340px; overflow-y: auto; font-size: 13px; }
+  .log li { border-left: 4px solid var(--line); padding-left: 8px; }
+  .log li.ok { border-color: var(--good); }
+  .log li.fail { border-color: var(--bad); }
+  .log time { font: 500 11px var(--mono); color: var(--muted); display: block; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="banner">
+    <div>
+      <h1 id="clanName">The Robot Clan</h1>
+      <p>Example agents doing pretend work. Swap in your real agents later.</p>
+    </div>
+    <div class="totals">
+      <div class="total"><b id="tWorking">0</b><span>Working now</span></div>
+      <div class="total"><b id="tDone">0</b><span>Tasks done</span></div>
+      <div class="total"><b id="tRate">0%</b><span>Success</span></div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <button class="primary" id="pauseBtn" type="button">Pause</button>
+    <form class="add" id="addForm">
+      <input id="newName" placeholder="Agent name" maxlength="14" required>
+      <input id="newRole" placeholder="Job, like Artist" maxlength="20" required>
+      <button type="submit">Add agent</button>
+    </form>
+    <span class="note">Score = tasks done × success rate</span>
+  </div>
+
+  <div class="main">
+    <section class="agents" id="agents" aria-label="Agents"></section>
+    <aside class="side">
+      <div class="panel">
+        <h2>Leaderboard</h2>
+        <ol class="board" id="board"></ol>
+      </div>
+      <div class="panel">
+        <h2>Clan diary</h2>
+        <ul class="log" id="log"></ul>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   STEP 1: YOUR CLAN MEMBERS
+   Change the names, jobs and colors here. Add or remove lines!
+   skill = how good they are (0 to 1). 0.9 means they succeed 9 times out of 10.
+   ========================================================= */
+const CLAN = [
+  { name: "Scout",  role: "Researcher",     color: "#2E86DE", skill: 0.92 },
+  { name: "Quill",  role: "Writer",         color: "#8E44AD", skill: 0.88 },
+  { name: "Bolt",   role: "Coder",          color: "#16A085", skill: 0.80 },
+  { name: "Pixel",  role: "Designer",       color: "#E84393", skill: 0.85 },
+  { name: "Ledger", role: "Math checker",   color: "#D35400", skill: 0.95 },
+  { name: "Echo",   role: "Email helper",   color: "#607D8B", skill: 0.90 },
+];
+
+/* STEP 2: THE KINDS OF JOBS EACH AGENT DOES (used for the pretend work) */
+const JOBS = {
+  "Researcher":   ["Searching the web for dinosaur facts", "Reading 5 articles about space", "Finding the best pizza recipe"],
+  "Writer":       ["Writing a short story", "Fixing spelling in homework", "Making a birthday poem"],
+  "Coder":        ["Building a calculator app", "Fixing a bug in the game", "Making a button turn blue"],
+  "Designer":     ["Drawing a logo", "Picking colors for the website", "Making a poster"],
+  "Math checker": ["Checking 20 math answers", "Adding up pocket money", "Counting stars in a photo"],
+  "Email helper": ["Sorting the inbox", "Writing a thank-you email", "Finding the email from Grandma"],
+};
+const ANY_JOB = ["Helping a friend", "Tidying up files", "Learning something new"];
+
+/* ---------- Everything below makes the page work ---------- */
+const agents = CLAN.map(makeAgent);
+let paused = false, clanDone = 0, clanOk = 0, clock = 0; // clock counts seconds
+
+function makeAgent(a) {
+  return { ...a, status: "idle", task: "Waiting for a job", progress: 0,
+           done: 0, ok: 0, totalTime: 0, started: 0, speed: 0, history: [], xp: 0, rest: rand(1, 3) };
+}
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(list) { return list[Math.floor(Math.random() * list.length)]; }
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+/* One "tick" happens every second. Each agent moves one step forward. */
+function tick() {
+  if (paused) return;
+  const now = ++clock;
+  for (const a of agents) {
+    if (a.status === "idle") {
+      if (--a.rest <= 0) {
+        a.status = "thinking"; a.task = pick(JOBS[a.role] || ANY_JOB); a.progress = 0;
+        a.started = now; a.rest = rand(1, 2);
+      }
+    } else if (a.status === "thinking") {
+      if (--a.rest <= 0) { a.status = "working"; a.speed = rand(6, 18) * (0.6 + a.skill * 0.6); }
+    } else if (a.status === "working") {
+      if (Math.random() < 0.02) { a.status = "stuck"; a.rest = rand(2, 4); addLog(`${a.name} got stuck on "${a.task}"`, "fail"); continue; }
+      a.progress = Math.min(100, a.progress + a.speed);
+      if (a.progress >= 100) finish(a, now);
+    } else if (a.status === "stuck") {
+      if (--a.rest <= 0) { a.status = "working"; addLog(`${a.name} got unstuck`); }
+    }
+  }
+  render();
+}
+
+function finish(a, now) {
+  const success = Math.random() < a.skill;
+  a.done++; clanDone++;
+  if (success) { a.ok++; clanOk++; a.xp += 20; }
+  a.totalTime += now - a.started;
+  a.history = [...a.history, success].slice(-10);
+  addLog(`${a.name} ${success ? "finished" : "failed"}: ${a.task}`, success ? "ok" : "fail");
+  a.status = "idle"; a.task = success ? "Resting after a win" : "Resting, will try again"; a.progress = 0; a.rest = rand(1, 3);
+}
+
+function rate(a) { return a.done ? a.ok / a.done : 0; }
+function score(a) { return Math.round(a.done * rate(a) * 10); }
+const STATUS_LABEL = { idle: "Resting", thinking: "Thinking", working: "Working", stuck: "Stuck" };
+
+function render() {
+  document.getElementById("agents").innerHTML = agents.map(a => {
+    const lvl = Math.floor(a.xp / 100) + 1, xpPct = a.xp % 100;
+    const dots = Array.from({ length: 10 }, (_, i) => {
+      const r = a.history[i]; return `<span class="dot ${r === undefined ? "" : r ? "ok" : "fail"}"></span>`;
+    }).join("");
+    return `
+    <article class="card ${a.status}" style="--agent:${a.color}">
+      <div class="top">
+        <div class="bot" aria-hidden="true"><div class="ant"></div><div class="head"><span class="eye"></span><span class="eye"></span></div></div>
+        <div class="who"><h3>${esc(a.name)}</h3><div class="role">${esc(a.role)}</div></div>
+        <span class="pill ${a.status}">${STATUS_LABEL[a.status]}</span>
+      </div>
+      <div class="task"><small>Right now</small>${esc(a.task)}</div>
+      <div class="bar" role="progressbar" aria-valuenow="${Math.round(a.progress)}" aria-valuemin="0" aria-valuemax="100"><i style="width:${a.progress}%"></i></div>
+      <div class="stats">
+        <div><b>${a.done}</b><span>Tasks done</span></div>
+        <div><b>${Math.round(rate(a) * 100)}%</b><span>Success</span></div>
+        <div><b>${a.done ? (a.totalTime / a.done).toFixed(1) : "–"}s</b><span>Avg time</span></div>
+      </div>
+      <div class="history">Last 10: ${dots}</div>
+      <div class="level">Lv ${lvl}<span class="xp"><i style="width:${xpPct}%"></i></span>${a.xp} XP</div>
+    </article>`;
+  }).join("");
+
+  const ranked = [...agents].sort((x, y) => score(y) - score(x));
+  document.getElementById("board").innerHTML = ranked.map((a, i) =>
+    `<li><span class="rank">${i + 1}</span><span class="sw" style="background:${a.color}"></span><span>${esc(a.name)}</span><span class="score">${score(a)}</span></li>`
+  ).join("");
+
+  document.getElementById("tWorking").textContent = agents.filter(a => a.status === "working").length;
+  document.getElementById("tDone").textContent = clanDone;
+  document.getElementById("tRate").textContent = (clanDone ? Math.round(clanOk / clanDone * 100) : 0) + "%";
+}
+
+function addLog(text, kind = "") {
+  const li = document.createElement("li");
+  li.className = kind;
+  li.innerHTML = `<time>${new Date().toLocaleTimeString()}</time>${esc(text)}`;
+  const log = document.getElementById("log");
+  log.prepend(li);
+  while (log.children.length > 40) log.lastChild.remove();
+}
+
+/* Buttons */
+document.getElementById("pauseBtn").onclick = e => {
+  paused = !paused; e.target.textContent = paused ? "Play" : "Pause";
+};
+document.getElementById("addForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const name = document.getElementById("newName").value.trim();
+  const role = document.getElementById("newRole").value.trim();
+  if (!name || !role) return;
+  const colors = ["#C0392B", "#27AE60", "#2980B9", "#F39C12", "#7F8C8D", "#1ABC9C"];
+  agents.push(makeAgent({ name, role, color: pick(colors), skill: 0.85 }));
+  addLog(`${name} joined the clan as ${role}!`, "ok");
+  e.target.reset();
+  render();
+});
+
+/* Warm-up: give the page some history so it isn't empty at the start */
+for (let i = 0; i < 40; i++) tick();
+addLog("The clan woke up and started working", "ok");
+render();
+setInterval(tick, 1000);
+</script>
