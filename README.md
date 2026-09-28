@@ -16,6 +16,7 @@ Right now the agents are **pretend**. They do make-believe jobs so you can see h
 | Gold / Elixir / Gem at the top | Tasks done, total XP, and success rate for the whole clan. |
 | Town Hall | Tap it to see the leaderboard (score = tasks done × success rate). |
 | Clan chat | Everything that happened, newest at the top. |
+| Red post office | The Mail Scout. Its bubble shows how many emails need you. |
 
 ## Step by step
 
@@ -48,7 +49,12 @@ Find `STEP 2: THE KINDS OF JOBS`. Each job type has a list of tasks in quote mar
 ### Step 4: Add agents without editing code
 Type a name and a job in the boxes under the map, pick a building type, and press **Build**. (These go away when you refresh. To keep one forever, add it in Step 2 instead.)
 
-### Step 5 (later): Connect real agents
+### The Mail Scout (a real agent)
+The red post office is the **Mail Scout**. It isn't pretend. Claude reads your email and writes a report: what to do today, what's waiting for your reply, and emails that mention your name. Tap the post office to read it. The red bubble shows how many things need you.
+
+To update it, ask Claude: *"Mail Scout, check my mail."* Your real report goes only to your private page on claude.ai. This file on GitHub keeps an example report, so your work emails never go into the repository.
+
+### Step 5 (later): Connect more real agents
 Right now the `tick()` function makes up the work. To show real agents, a grown-up helper or Claude can change the page so it reads each agent's real status (for example from a file or a small server) instead of making it up. Ask Claude: *"Connect my Agent Clan HQ page to my real agents"* and tell it what your agents are and where they run.
 
 ## Tips

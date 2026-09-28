@@ -99,6 +99,22 @@
   .bubble.think { background: #EADBFF; }
   .bubble.bang { background: var(--bad); color: #fff; }
   .bubble.win { background: var(--gold); }
+  .bubble.mail { background: var(--bad); color: #fff; }
+  .real .tag .lv { background: var(--bad); }
+  .real .pbar { display: none; }
+
+  /* Mail Scout report */
+  .report { display: grid; gap: 12px; max-height: 60vh; overflow-y: auto; }
+  .report h4 { margin: 0 0 6px; font: 17px var(--title); font-weight: 400; display: flex; align-items: center; gap: 8px; }
+  .report h4 .chip { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #000; }
+  .report ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .report li { background: #EAD39C; border-radius: 10px; padding: 8px 10px; }
+  .report li b { display: block; }
+  .report li p { margin: 2px 0 0; font-size: 13px; font-weight: 600; }
+  .report li a { font-size: 12px; font-weight: 800; color: #1F5FA8; }
+  .tone-bad .chip { background: var(--bad); } .tone-warn .chip { background: #FF9800; }
+  .tone-info .chip { background: #9E9E8E; } .tone-ok .chip { background: var(--good); }
+  .report .when { font-size: 12px; color: #7A5A3A; margin: 0; }
   @keyframes bob { 50% { transform: translateY(-5px); } }
 
   /* building animations */
@@ -144,7 +160,7 @@
 
   /* ---------- Info popup (opens when you tap a building) ---------- */
   .popup {
-    position: fixed; inset: 0; background: rgba(0,0,0,.55); display: grid; place-items: center; padding: 16px; z-index: 10;
+    position: fixed; inset: 0; background: rgba(0,0,0,.55); display: grid; place-items: center; padding: 16px; z-index: 1000;
   }
   .sheet {
     width: min(440px, 100%); background: var(--parchment); color: var(--ink);
@@ -182,7 +198,7 @@
       <div class="badge stroke">A</div>
       <div>
         <h1 class="stroke" id="clanName">Robot Clan Village</h1>
-        <p>Example agents doing pretend work. Tap a building!</p>
+        <p>The Mail Scout is real. The other agents are pretend examples. Tap a building!</p>
       </div>
     </div>
     <div class="res">
@@ -243,6 +259,26 @@ const CLAN = [
   { name: "Ledger", role: "Math checker", shape: "tower", color: "#D35400", skill: 0.95 },
   { name: "Echo",   role: "Email helper", shape: "hut",   color: "#546E7A", skill: 0.90 },
 ];
+
+/* STEP 3: THE MAIL SCOUT (a real agent, not pretend)
+   Claude reads your email and writes the report below. Ask Claude:
+   "Mail Scout, check my mail" and it updates this part. */
+const MAIL_SCOUT = { name: "Mail Scout", role: "Reads your email", shape: "post", color: "#C62828" };
+/*MAIL_REPORT_START*/
+const MAIL_REPORT = {
+  checked: "Example report. Ask Claude to check your mail to fill this in.",
+  sections: [
+    { title: "Do today", tone: "bad", items: [
+      { what: "Team meeting at 3:30 PM", why: "Someone asked you to bring numbers to the meeting.", link: "" } ] },
+    { title: "Waiting for your reply", tone: "warn", items: [
+      { what: "A question from a colleague", why: "Nobody has answered yet.", link: "" } ] },
+    { title: "Emails that mention your name", tone: "info", items: [
+      { what: "A message that says your name", why: "What it asks you to do.", link: "" } ] },
+    { title: "Done", tone: "ok", items: [
+      { what: "A reply you already sent", why: "Nothing left to do.", link: "" } ] },
+  ],
+};
+/*MAIL_REPORT_END*/
 
 /* STEP 2: THE KINDS OF JOBS EACH AGENT DOES (used for the pretend work) */
 const JOBS = {
@@ -305,11 +341,17 @@ function buildingSVG(shape, color, lvl, isTownHall) {
   const stars = Array.from({ length: Math.min(lvl, 5) }, (_, i) =>
     `<polygon points="0,-5 1.5,-1.5 5,-1.5 2.2,0.8 3.2,4.5 0,2.3 -3.2,4.5 -2.2,0.8 -5,-1.5 -1.5,-1.5"
       transform="translate(${60 - (Math.min(lvl, 5) - 1) * 6 + i * 12},114)" fill="#FFD23F" stroke="#7A5A00" stroke-width=".8"/>`).join("");
+  const post = shape !== "post" ? "" : `
+    <g transform="translate(66 ${topL + 44}) skewY(-27)"><rect width="22" height="15" rx="2" fill="#fff" stroke="#333" stroke-width="1.2"/>
+      <polyline points="0,0 11,8 22,0" fill="none" stroke="#333" stroke-width="1.2"/></g>
+    <rect x="100" y="80" width="3" height="18" fill="#5A3A1E"/>
+    <rect x="94" y="70" width="15" height="11" rx="5" fill="#E53935" stroke="#7A1010" stroke-width="1"/>
+    <rect x="106" y="64" width="2" height="8" fill="#333"/><rect x="106" y="64" width="6" height="4" fill="#FFD23F"/>`;
   return `<svg viewBox="0 0 120 120" aria-hidden="true">
     <ellipse cx="60" cy="97" rx="54" ry="24" fill="rgba(0,0,0,.18)"/>
     <polygon points="60,72 108,95 60,118 12,95" fill="#9E9E8E"/>
     <polygon points="60,76 100,95 60,114 20,95" fill="#B8B8A6"/>
-    ${walls}${chimney}${roofSVG}${stars}
+    ${walls}${chimney}${roofSVG}${post}${stars}
   </svg>`;
 }
 
@@ -368,6 +410,7 @@ function tick() {
   if (paused) return;
   const now = ++clock;
   for (const a of agents) {
+    if (a.real) continue;              // the Mail Scout does real work, not pretend work
     if (a.status === "idle") {
       if (--a.rest <= 0) {
         a.status = "thinking"; a.task = pick(JOBS[a.role] || ANY_JOB); a.progress = 0;
@@ -402,6 +445,7 @@ const STATUS = { idle: "Resting", thinking: "Thinking", working: "Working", stuc
 
 function render() {
   for (const a of agents) {
+    if (a.real) { renderMailScout(a); continue; }
     const lvl = level(a);
     a.el.className = "bldg " + a.status;
     a.el.setAttribute("aria-label", `${a.name}, level ${lvl}, ${STATUS[a.status]}`);
@@ -421,15 +465,45 @@ function render() {
   if (!document.getElementById("popup").hidden) renderPopup();
 }
 
+/* The Mail Scout shows how many things need you */
+function mailTodo() {
+  return MAIL_REPORT.sections.filter(s => s.tone === "bad" || s.tone === "warn").reduce((n, s) => n + s.items.length, 0);
+}
+function renderMailScout(a) {
+  if (a.drawn) return;
+  const n = mailTodo();
+  a.el.className = "bldg working real";
+  a.el.setAttribute("aria-label", `Mail Scout: ${n} things need you. Tap to read the report.`);
+  a.el.querySelector(".nm").textContent = a.name;
+  a.el.querySelector(".lv").textContent = "Real agent · Report ready";
+  a.el.querySelector(".pic").innerHTML = buildingSVG(a.shape, a.color, 3);
+  const bub = a.el.querySelector(".bubble");
+  bub.hidden = n === 0; bub.className = "bubble mail"; bub.textContent = n + " to do";
+  a.drawn = true;
+}
+function mailReportHTML() {
+  return `<div class="report"><p class="when">${esc(MAIL_REPORT.checked)}</p>` +
+    MAIL_REPORT.sections.filter(s => s.items.length).map(s => `
+      <section class="tone-${s.tone}"><h4 class="stroke"><span class="chip"></span>${esc(s.title)} (${s.items.length})</h4>
+      <ul>${s.items.map(i => `<li><b>${esc(i.what)}</b><p>${esc(i.why)}</p>${
+        i.link ? `<a href="${esc(i.link)}" target="_blank" rel="noopener">Open in Gmail</a>` : ""}</li>`).join("")}</ul></section>`).join("") +
+    `</div>`;
+}
+
 /* The info window that opens when you tap a building */
 function renderPopup() {
   const pop = document.getElementById("popup");
   const title = document.getElementById("popTitle"), body = document.getElementById("popBody");
   if (showRanks) {
     title.textContent = "Clan leaderboard";
-    const ranked = [...agents].sort((x, y) => score(y) - score(x));
+    const ranked = agents.filter(a => !a.real).sort((x, y) => score(y) - score(x));
     body.innerHTML = `<p style="margin:0">Score = tasks done × success rate. Tap a building to see its details.</p>
       <ol class="ranks">${ranked.map((a, i) => `<li><span class="r">${i + 1}</span><span>${esc(a.name)} <small>(Lv ${level(a)})</small></span><span>${score(a)}</span></li>`).join("")}</ol>`;
+  } else if (openAgent && openAgent.real) {
+    title.textContent = "Mail Scout report";
+    if (!pop.hidden && pop.dataset.showing === "mail") return;   // don't reset scrolling every second
+    body.innerHTML = mailReportHTML();
+    pop.dataset.showing = "mail"; pop.hidden = false; return;
   } else if (openAgent) {
     const a = openAgent, lvl = level(a);
     title.textContent = `${a.name} (Level ${lvl})`;
@@ -446,9 +520,10 @@ function renderPopup() {
       <div><strong>XP to next level: ${a.xp % 100} / 100</strong><div class="xpbar"><i style="width:${a.xp % 100}%"></i></div></div>
       <div class="dots">Last 10 jobs: ${dots}</div>`;
   } else return;
+  pop.dataset.showing = "";
   pop.hidden = false;
 }
-function closePopup() { document.getElementById("popup").hidden = true; openAgent = null; showRanks = false; }
+function closePopup() { const p = document.getElementById("popup"); p.hidden = true; p.dataset.showing = ""; openAgent = null; showRanks = false; }
 document.getElementById("popClose").onclick = closePopup;
 document.getElementById("popup").addEventListener("click", e => { if (e.target.id === "popup") closePopup(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closePopup(); });
@@ -482,10 +557,12 @@ window.addEventListener("resize", layout);
 /* Start the village */
 decorate();
 placeTownHall();
+makeAgent({ ...MAIL_SCOUT, real: true });
 CLAN.forEach(makeAgent);
 layout();
 for (let i = 0; i < 40; i++) tick();   // warm-up so the village isn't empty at the start
 chat("Town Hall", "The clan woke up and started working");
+chat("Mail Scout", `checked your inbox: ${mailTodo()} things need you. Tap the post office!`);
 render();
 setInterval(tick, 1000);
 </script>
