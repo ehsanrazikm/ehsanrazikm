@@ -18,6 +18,7 @@ Right now the agents are **pretend**. They do make-believe jobs so you can see h
 | Clan chat | Everything that happened, newest at the top. |
 | Red post office | The Mail Scout. Its bubble shows how many emails need you. |
 | Blue "in" hut | Echo, your LinkedIn manager. Its bubble shows how many posts are ready. |
+| Purple "ad" tower | Ad Spy. It watches competitors' ads in the Meta Ad Library. |
 
 ## Step by step
 
@@ -61,6 +62,11 @@ The blue hut with the **in** sign is **Echo**. Claude writes LinkedIn posts and 
 To update it, ask Claude: *"Echo, plan my LinkedIn week."*
 
 To let Echo save drafts or schedule posts in your LinkedIn account, connect **Typefully** or **Metricool** at claude.ai → Settings → Connectors.
+
+### Ad Spy (competitor ads)
+The purple watchtower with the **ad** sign is **Ad Spy**. It tracks competitors' ads in the free [Meta Ad Library](https://www.facebook.com/ads/library/): how long each ad has run, the offer, the service, the call to action and the language. Ads running 60+ days are probably working.
+
+To start, send Claude one Ad Library link per competitor (Country and Active ads filters set). To run it every week, connect **Apify** at claude.ai → Settings → Connectors. Then ask: *"Ad Spy, check competitor ads."*
 
 ### Step 5 (later): Connect more real agents
 Right now the `tick()` function makes up the work. To show real agents, a grown-up helper or Claude can change the page so it reads each agent's real status (for example from a file or a small server) instead of making it up. Ask Claude: *"Connect my Agent Clan HQ page to my real agents"* and tell it what your agents are and where they run.

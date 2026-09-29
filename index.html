@@ -201,7 +201,7 @@
       <div class="badge stroke">A</div>
       <div>
         <h1 class="stroke" id="clanName">Robot Clan Village</h1>
-        <p>Mail Scout and Echo are real. The other agents are pretend examples. Tap a building!</p>
+        <p>Mail Scout, Echo and Ad Spy are real. The other agents are pretend examples. Tap a building!</p>
       </div>
     </div>
     <div class="res">
@@ -265,7 +265,8 @@ const CLAN = [
 /* STEP 3: REAL AGENTS (not pretend)
    Claude does their work and writes their reports below.
    Mail Scout: ask Claude "Mail Scout, check my mail".
-   Echo: ask Claude "Echo, plan my LinkedIn week". */
+   Echo: ask Claude "Echo, plan my LinkedIn week".
+   Ad Spy: ask Claude "Ad Spy, check competitor ads". */
 /*MAIL_REPORT_START*/
 const MAIL_REPORT = {
   checked: "This public website shows an example report. Your real mail report is private, so only you can see it.",
@@ -298,12 +299,26 @@ const LINKEDIN_REPORT = {
   ],
 };
 /*LINKEDIN_REPORT_END*/
+/*ADS_REPORT_START*/
+const ADS_REPORT = {
+  checked: "This public website shows an example. Your real competitor ad report is private, so only you can see it.",
+  privateLink: "https://claude.ai/artifact/YLBsfvCamSjRZZtxj7vX49",
+  sections: [
+    { title: "Needs you", tone: "warn", items: [
+      { what: "Pick the competitors to watch", why: "Ad Spy checks their ads every week." } ] },
+    { title: "What Ad Spy looks for", tone: "info", items: [
+      { what: "Ads running 60+ days", why: "They are probably working, because nobody keeps paying for an ad that doesn't bring customers." } ] },
+  ],
+};
+/*ADS_REPORT_END*/
 
 const REAL_AGENTS = [
   { name: "Mail Scout", role: "Reads your email", shape: "post", color: "#C62828",
     report: MAIL_REPORT, bubble: "to do", linkLabel: "Open in Gmail" },
   { name: "Echo", role: "LinkedIn manager", shape: "hut", sign: "in", color: "#0A66C2",
     report: LINKEDIN_REPORT, bubble: "posts ready", linkLabel: "Open" },
+  { name: "Ad Spy", role: "Watches competitor ads", shape: "tower", sign: "ad", signColor: "#6A1B9A", color: "#4A148C",
+    report: ADS_REPORT, bubble: "to set up", linkLabel: "Open" },
 ];
 
 /* STEP 2: THE KINDS OF JOBS EACH AGENT DOES (used for the pretend work) */
@@ -336,7 +351,7 @@ function rate(a) { return a.done ? a.ok / a.done : 0; }
 function score(a) { return Math.round(a.done * rate(a) * 10); }
 
 /* Draws one building as a picture (SVG). Bigger level = more gold stars. */
-function buildingSVG(shape, color, lvl, isTownHall, sign) {
+function buildingSVG(shape, color, lvl, isTownHall, sign, signColor = "#0A66C2") {
   const roof = color, roofDark = shade(color, -45);
   const wallH = shape === "tower" ? 46 : shape === "hut" ? 18 : 30;
   const top = 73 - wallH, topL = 55 - wallH;
@@ -374,7 +389,7 @@ function buildingSVG(shape, color, lvl, isTownHall, sign) {
     <rect x="94" y="70" width="15" height="11" rx="5" fill="#E53935" stroke="#7A1010" stroke-width="1"/>
     <rect x="106" y="64" width="2" height="8" fill="#333"/><rect x="106" y="64" width="6" height="4" fill="#FFD23F"/>`;
   const signSVG = !sign ? "" : `
-    <g transform="translate(68 ${topL + 38}) skewY(-27)"><rect width="18" height="18" rx="4" fill="#0A66C2" stroke="#063E75" stroke-width="1"/>
+    <g transform="translate(68 ${topL + 38}) skewY(-27)"><rect width="18" height="18" rx="4" fill="${signColor}" stroke="#222" stroke-width="1"/>
       <text x="9" y="13.5" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="11" fill="#fff">${sign}</text></g>`;
   return `<svg viewBox="0 0 120 120" aria-hidden="true">
     <ellipse cx="60" cy="97" rx="54" ry="24" fill="rgba(0,0,0,.18)"/>
@@ -505,7 +520,7 @@ function renderRealAgent(a) {
   a.el.setAttribute("aria-label", `${a.name}: ${n} ${a.bubble}. Tap to read the report.`);
   a.el.querySelector(".nm").textContent = a.name;
   a.el.querySelector(".lv").textContent = `Real agent · ${a.role}`;
-  a.el.querySelector(".pic").innerHTML = buildingSVG(a.shape, a.color, 3, false, a.sign);
+  a.el.querySelector(".pic").innerHTML = buildingSVG(a.shape, a.color, 3, false, a.sign, a.signColor);
   const bub = a.el.querySelector(".bubble");
   bub.hidden = n === 0; bub.className = "bubble mail"; bub.textContent = `${n} ${a.bubble}`;
   a.drawn = true;
@@ -607,6 +622,7 @@ for (let i = 0; i < 40; i++) tick();   // warm-up so the village isn't empty at 
 chat("Town Hall", "The clan woke up and started working");
 chat("Mail Scout", `checked your inbox: ${todoCount(MAIL_REPORT)} things need you. Tap the post office!`);
 chat("Echo", `has ${todoCount(LINKEDIN_REPORT)} LinkedIn posts ready for you. Tap the blue "in" hut!`);
+chat("Ad Spy", `moved into the purple watchtower. Tap it to set up competitor ad tracking!`);
 render();
 setInterval(tick, 1000);
 </script>
