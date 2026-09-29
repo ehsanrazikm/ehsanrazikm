@@ -17,6 +17,7 @@ Right now the agents are **pretend**. They do make-believe jobs so you can see h
 | Town Hall | Tap it to see the leaderboard (score = tasks done × success rate). |
 | Clan chat | Everything that happened, newest at the top. |
 | Red post office | The Mail Scout. Its bubble shows how many emails need you. |
+| Blue "in" hut | Echo, your LinkedIn manager. Its bubble shows how many posts are ready. |
 
 ## Step by step
 
@@ -53,6 +54,13 @@ Type a name and a job in the boxes under the map, pick a building type, and pres
 The red post office is the **Mail Scout**. It isn't pretend. Claude reads your email and writes a report: what to do today, what's waiting for your reply, and emails that mention your name. Tap the post office to read it. The red bubble shows how many things need you.
 
 To update it, ask Claude: *"Mail Scout, check my mail."* Your real report goes only to your private page on claude.ai. This file on GitHub keeps an example report, so your work emails never go into the repository.
+
+### Echo (your LinkedIn manager)
+The blue hut with the **in** sign is **Echo**. Claude writes LinkedIn posts and a weekly plan for you. Tap the hut, press **Copy post**, and paste it into LinkedIn. Echo never posts by itself.
+
+To update it, ask Claude: *"Echo, plan my LinkedIn week."*
+
+To let Echo save drafts or schedule posts in your LinkedIn account, connect **Typefully** or **Metricool** at claude.ai → Settings → Connectors.
 
 ### Step 5 (later): Connect more real agents
 Right now the `tick()` function makes up the work. To show real agents, a grown-up helper or Claude can change the page so it reads each agent's real status (for example from a file or a small server) instead of making it up. Ask Claude: *"Connect my Agent Clan HQ page to my real agents"* and tell it what your agents are and where they run.

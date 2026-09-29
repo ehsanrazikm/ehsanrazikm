@@ -115,6 +115,9 @@
   .tone-bad .chip { background: var(--bad); } .tone-warn .chip { background: #FF9800; }
   .tone-info .chip { background: #9E9E8E; } .tone-ok .chip { background: var(--good); }
   .report .when { font-size: 12px; color: #7A5A3A; margin: 0; }
+  .report .draft { white-space: pre-wrap; background: #FFF8E6; border: 2px dashed #C9B07A; border-radius: 8px;
+                   padding: 8px 10px; margin: 6px 0; font-size: 13px; font-weight: 600; line-height: 1.45; }
+  .report .copy { font-size: 14px; padding: 4px 12px; margin-right: 8px; }
   @keyframes bob { 50% { transform: translateY(-5px); } }
 
   /* building animations */
@@ -198,7 +201,7 @@
       <div class="badge stroke">A</div>
       <div>
         <h1 class="stroke" id="clanName">Robot Clan Village</h1>
-        <p>The Mail Scout is real. The other agents are pretend examples. Tap a building!</p>
+        <p>Mail Scout and Echo are real. The other agents are pretend examples. Tap a building!</p>
       </div>
     </div>
     <div class="res">
@@ -257,13 +260,12 @@ const CLAN = [
   { name: "Bolt",   role: "Coder",        shape: "hut",   color: "#16A085", skill: 0.80 },
   { name: "Pixel",  role: "Designer",     shape: "house", color: "#E84393", skill: 0.85 },
   { name: "Ledger", role: "Math checker", shape: "tower", color: "#D35400", skill: 0.95 },
-  { name: "Echo",   role: "Email helper", shape: "hut",   color: "#546E7A", skill: 0.90 },
 ];
 
-/* STEP 3: THE MAIL SCOUT (a real agent, not pretend)
-   Claude reads your email and writes the report below. Ask Claude:
-   "Mail Scout, check my mail" and it updates this part. */
-const MAIL_SCOUT = { name: "Mail Scout", role: "Reads your email", shape: "post", color: "#C62828" };
+/* STEP 3: REAL AGENTS (not pretend)
+   Claude does their work and writes their reports below.
+   Mail Scout: ask Claude "Mail Scout, check my mail".
+   Echo: ask Claude "Echo, plan my LinkedIn week". */
 /*MAIL_REPORT_START*/
 const MAIL_REPORT = {
   checked: "This public website shows an example report. Your real mail report is private, so only you can see it.",
@@ -280,6 +282,29 @@ const MAIL_REPORT = {
   ],
 };
 /*MAIL_REPORT_END*/
+/*LINKEDIN_REPORT_START*/
+const LINKEDIN_REPORT = {
+  checked: "This public website shows an example plan. Your real LinkedIn plan is private, so only you can see it.",
+  privateLink: "https://claude.ai/artifact/YLBsfvCamSjRZZtxj7vX49",
+  sections: [
+    { title: "Posts ready to copy", tone: "warn", items: [
+      { what: "Tuesday: a lesson from your work", why: "Copy it, change anything you like, and post it on LinkedIn.",
+        post: "Here is one thing I learned this month...\n\n(Write the lesson in 3 short lines.)\n\nWhat would you add?" } ] },
+    { title: "Connect your LinkedIn", tone: "info", items: [
+      { what: "Typefully (Claude connector)", why: "Lets Echo save drafts and schedule posts in your LinkedIn. Connect it at claude.ai, Settings, Connectors.", link: "https://typefully.com" },
+      { what: "Metricool (Claude connector)", why: "Schedules posts and shows your LinkedIn stats.", link: "https://metricool.com" } ] },
+    { title: "This week's plan", tone: "info", items: [
+      { what: "Every day: 10 minutes", why: "Leave a helpful comment on 3 posts from people in your field." } ] },
+  ],
+};
+/*LINKEDIN_REPORT_END*/
+
+const REAL_AGENTS = [
+  { name: "Mail Scout", role: "Reads your email", shape: "post", color: "#C62828",
+    report: MAIL_REPORT, bubble: "to do", linkLabel: "Open in Gmail" },
+  { name: "Echo", role: "LinkedIn manager", shape: "hut", sign: "in", color: "#0A66C2",
+    report: LINKEDIN_REPORT, bubble: "posts ready", linkLabel: "Open" },
+];
 
 /* STEP 2: THE KINDS OF JOBS EACH AGENT DOES (used for the pretend work) */
 const JOBS = {
@@ -311,7 +336,7 @@ function rate(a) { return a.done ? a.ok / a.done : 0; }
 function score(a) { return Math.round(a.done * rate(a) * 10); }
 
 /* Draws one building as a picture (SVG). Bigger level = more gold stars. */
-function buildingSVG(shape, color, lvl, isTownHall) {
+function buildingSVG(shape, color, lvl, isTownHall, sign) {
   const roof = color, roofDark = shade(color, -45);
   const wallH = shape === "tower" ? 46 : shape === "hut" ? 18 : 30;
   const top = 73 - wallH, topL = 55 - wallH;
@@ -348,11 +373,14 @@ function buildingSVG(shape, color, lvl, isTownHall) {
     <rect x="100" y="80" width="3" height="18" fill="#5A3A1E"/>
     <rect x="94" y="70" width="15" height="11" rx="5" fill="#E53935" stroke="#7A1010" stroke-width="1"/>
     <rect x="106" y="64" width="2" height="8" fill="#333"/><rect x="106" y="64" width="6" height="4" fill="#FFD23F"/>`;
+  const signSVG = !sign ? "" : `
+    <g transform="translate(68 ${topL + 38}) skewY(-27)"><rect width="18" height="18" rx="4" fill="#0A66C2" stroke="#063E75" stroke-width="1"/>
+      <text x="9" y="13.5" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="11" fill="#fff">${sign}</text></g>`;
   return `<svg viewBox="0 0 120 120" aria-hidden="true">
     <ellipse cx="60" cy="97" rx="54" ry="24" fill="rgba(0,0,0,.18)"/>
     <polygon points="60,72 108,95 60,118 12,95" fill="#9E9E8E"/>
     <polygon points="60,76 100,95 60,114 20,95" fill="#B8B8A6"/>
-    ${walls}${chimney}${roofSVG}${post}${stars}
+    ${walls}${chimney}${roofSVG}${post}${signSVG}${stars}
   </svg>`;
 }
 
@@ -411,7 +439,7 @@ function tick() {
   if (paused) return;
   const now = ++clock;
   for (const a of agents) {
-    if (a.real) continue;              // the Mail Scout does real work, not pretend work
+    if (a.real) continue;              // real agents do real work, not pretend work
     if (a.status === "idle") {
       if (--a.rest <= 0) {
         a.status = "thinking"; a.task = pick(JOBS[a.role] || ANY_JOB); a.progress = 0;
@@ -446,7 +474,7 @@ const STATUS = { idle: "Resting", thinking: "Thinking", working: "Working", stuc
 
 function render() {
   for (const a of agents) {
-    if (a.real) { renderMailScout(a); continue; }
+    if (a.real) { renderRealAgent(a); continue; }
     const lvl = level(a);
     a.el.className = "bldg " + a.status;
     a.el.setAttribute("aria-label", `${a.name}, level ${lvl}, ${STATUS[a.status]}`);
@@ -466,32 +494,44 @@ function render() {
   if (!document.getElementById("popup").hidden) renderPopup();
 }
 
-/* The Mail Scout shows how many things need you */
-function mailTodo() {
-  return MAIL_REPORT.sections.filter(s => s.tone === "bad" || s.tone === "warn").reduce((n, s) => n + s.items.length, 0);
+/* Real agents show how many things need you */
+function todoCount(report) {
+  return report.sections.filter(r => r.tone === "bad" || r.tone === "warn").reduce((n, r) => n + r.items.length, 0);
 }
-function renderMailScout(a) {
+function renderRealAgent(a) {
   if (a.drawn) return;
-  const n = mailTodo();
+  const n = todoCount(a.report);
   a.el.className = "bldg working real";
-  a.el.setAttribute("aria-label", `Mail Scout: ${n} things need you. Tap to read the report.`);
+  a.el.setAttribute("aria-label", `${a.name}: ${n} ${a.bubble}. Tap to read the report.`);
   a.el.querySelector(".nm").textContent = a.name;
-  a.el.querySelector(".lv").textContent = "Real agent · Report ready";
-  a.el.querySelector(".pic").innerHTML = buildingSVG(a.shape, a.color, 3);
+  a.el.querySelector(".lv").textContent = `Real agent · ${a.role}`;
+  a.el.querySelector(".pic").innerHTML = buildingSVG(a.shape, a.color, 3, false, a.sign);
   const bub = a.el.querySelector(".bubble");
-  bub.hidden = n === 0; bub.className = "bubble mail"; bub.textContent = n + " to do";
+  bub.hidden = n === 0; bub.className = "bubble mail"; bub.textContent = `${n} ${a.bubble}`;
   a.drawn = true;
 }
-function mailReportHTML() {
-  const priv = MAIL_REPORT.privateLink
-    ? `<a class="btn blue" href="${esc(MAIL_REPORT.privateLink)}" target="_blank" rel="noopener" style="justify-self:start;text-decoration:none">Open my real report</a>` : "";
-  return `<div class="report"><p class="when">${esc(MAIL_REPORT.checked)}</p>${priv}` +
-    MAIL_REPORT.sections.filter(s => s.items.length).map(s => `
-      <section class="tone-${s.tone}"><h4 class="stroke"><span class="chip"></span>${esc(s.title)} (${s.items.length})</h4>
-      <ul>${s.items.map(i => `<li><b>${esc(i.what)}</b><p>${esc(i.why)}</p>${
-        i.link ? `<a href="${esc(i.link)}" target="_blank" rel="noopener">Open in Gmail</a>` : ""}</li>`).join("")}</ul></section>`).join("") +
+function reportHTML(a) {
+  const R = a.report;
+  const priv = R.privateLink
+    ? `<a class="btn blue" href="${esc(R.privateLink)}" target="_blank" rel="noopener" style="justify-self:start;text-decoration:none">Open my real report</a>` : "";
+  return `<div class="report"><p class="when">${esc(R.checked)}</p>${priv}` +
+    R.sections.filter(r => r.items.length).map(r => `
+      <section class="tone-${r.tone}"><h4 class="stroke"><span class="chip"></span>${esc(r.title)} (${r.items.length})</h4>
+      <ul>${r.items.map(i => `<li><b>${esc(i.what)}</b><p>${esc(i.why)}</p>${
+        i.post ? `<div class="draft">${esc(i.post)}</div><button class="btn copy" type="button">Copy post</button>` : ""}${
+        i.link ? `<a href="${esc(i.link)}" target="_blank" rel="noopener">${esc(a.linkLabel)}</a>` : ""}</li>`).join("")}</ul></section>`).join("") +
     `</div>`;
 }
+
+/* "Copy post" buttons put the draft on your clipboard */
+document.getElementById("popBody").addEventListener("click", e => {
+  const btn = e.target.closest(".copy"); if (!btn) return;
+  const draft = btn.previousElementSibling;
+  const done = () => { btn.textContent = "Copied!"; setTimeout(() => btn.textContent = "Copy post", 1500); };
+  const fallback = () => { const r = document.createRange(); r.selectNodeContents(draft);
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); btn.textContent = "Press Ctrl+C"; };
+  try { navigator.clipboard.writeText(draft.textContent).then(done, fallback); } catch { fallback(); }
+});
 
 /* The info window that opens when you tap a building */
 function renderPopup() {
@@ -503,10 +543,10 @@ function renderPopup() {
     body.innerHTML = `<p style="margin:0">Score = tasks done × success rate. Tap a building to see its details.</p>
       <ol class="ranks">${ranked.map((a, i) => `<li><span class="r">${i + 1}</span><span>${esc(a.name)} <small>(Lv ${level(a)})</small></span><span>${score(a)}</span></li>`).join("")}</ol>`;
   } else if (openAgent && openAgent.real) {
-    title.textContent = "Mail Scout report";
-    if (!pop.hidden && pop.dataset.showing === "mail") return;   // don't reset scrolling every second
-    body.innerHTML = mailReportHTML();
-    pop.dataset.showing = "mail"; pop.hidden = false; return;
+    title.textContent = `${openAgent.name} report`;
+    if (!pop.hidden && pop.dataset.showing === openAgent.name) return;   // don't reset scrolling every second
+    body.innerHTML = reportHTML(openAgent);
+    pop.dataset.showing = openAgent.name; pop.hidden = false; return;
   } else if (openAgent) {
     const a = openAgent, lvl = level(a);
     title.textContent = `${a.name} (Level ${lvl})`;
@@ -560,12 +600,13 @@ window.addEventListener("resize", layout);
 /* Start the village */
 decorate();
 placeTownHall();
-makeAgent({ ...MAIL_SCOUT, real: true });
+REAL_AGENTS.forEach(r => makeAgent({ ...r, real: true }));
 CLAN.forEach(makeAgent);
 layout();
 for (let i = 0; i < 40; i++) tick();   // warm-up so the village isn't empty at the start
 chat("Town Hall", "The clan woke up and started working");
-chat("Mail Scout", `checked your inbox: ${mailTodo()} things need you. Tap the post office!`);
+chat("Mail Scout", `checked your inbox: ${todoCount(MAIL_REPORT)} things need you. Tap the post office!`);
+chat("Echo", `has ${todoCount(LINKEDIN_REPORT)} LinkedIn posts ready for you. Tap the blue "in" hut!`);
 render();
 setInterval(tick, 1000);
 </script>
